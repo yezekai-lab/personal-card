@@ -2,9 +2,11 @@ import { useEffect } from 'react'
 import Card3D from '../components/Card3D.jsx'
 import Reveal from '../components/Reveal.jsx'
 import Icon from '../components/Icon.jsx'
-import { projects } from '../data/content.js'
+import { useContent } from '../context/ContentContext.jsx'
 
 export default function Projects() {
+  const { projects } = useContent()
+
   useEffect(() => {
     document.title = '叶泽楷 | 项目'
   }, [])

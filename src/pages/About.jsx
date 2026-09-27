@@ -1,9 +1,11 @@
 import { useEffect } from 'react'
 import Reveal from '../components/Reveal.jsx'
 import Icon from '../components/Icon.jsx'
-import { profile, timeline, vibes } from '../data/content.js'
+import { useContent } from '../context/ContentContext.jsx'
 
 export default function About() {
+  const { profile, timeline, vibes } = useContent()
+
   useEffect(() => {
     document.title = '叶泽楷 | 关于'
   }, [])

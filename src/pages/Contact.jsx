@@ -3,9 +3,11 @@ import Reveal from '../components/Reveal.jsx'
 import Magnetic from '../components/Magnetic.jsx'
 import CopyItem from '../components/CopyItem.jsx'
 import Icon from '../components/Icon.jsx'
-import { profile, socials } from '../data/content.js'
+import { useContent } from '../context/ContentContext.jsx'
 
 export default function Contact() {
+  const { profile, socials } = useContent()
+
   useEffect(() => {
     document.title = '叶泽楷 | 联系'
   }, [])

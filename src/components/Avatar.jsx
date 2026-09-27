@@ -9,7 +9,9 @@ export default function Avatar({ mottos }) {
   const burst = useConfetti()
 
   const onClick = () => {
-    showToast('「' + mottos[(Math.random() * mottos.length) | 0].text + '」')
+    if (mottos && mottos.length) {
+      showToast('「' + mottos[(Math.random() * mottos.length) | 0].text + '」')
+    }
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const el = ref.current
     el.classList.remove('spin')

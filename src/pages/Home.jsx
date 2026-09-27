@@ -8,9 +8,11 @@ import StatusBar from '../components/StatusBar.jsx'
 import Magnetic from '../components/Magnetic.jsx'
 import Icon from '../components/Icon.jsx'
 import Reveal from '../components/Reveal.jsx'
-import { profile, typewriterPhrases, skills, vibes, mottos, statuses } from '../data/content.js'
+import { useContent } from '../context/ContentContext.jsx'
 
 export default function Home() {
+  const { profile, typewriterPhrases, skills, vibes, mottos, statuses } = useContent()
+
   useEffect(() => {
     document.title = '叶泽楷 | 首页'
   }, [])

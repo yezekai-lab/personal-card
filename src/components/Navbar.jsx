@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import Icon from './Icon.jsx'
-import { profile } from '../data/content.js'
+import { useContent } from '../context/ContentContext.jsx'
 
 const links = [
   { to: '/', label: '首页' },
@@ -12,6 +12,7 @@ const links = [
 ]
 
 export default function Navbar({ theme, onToggleTheme }) {
+  const { profile } = useContent()
   const [open, setOpen] = useState(false)
   const location = useLocation()
 

@@ -7,6 +7,11 @@ export default function Typewriter({ phrases }) {
   const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
+    if (!phrases || phrases.length === 0) {
+      setText('')
+      return
+    }
+
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       setText(phrases.join(' · '))
       return
