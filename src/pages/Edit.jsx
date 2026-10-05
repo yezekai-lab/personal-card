@@ -38,12 +38,12 @@ function toBase64(str) {
   return btoa(binary)
 }
 
-async function commitContent(token, content) {
+async function commitFile(token, repoPath, contentBase64, message) {
   const headers = {
     Authorization: 'Bearer ' + token,
     Accept: 'application/vnd.github+json',
   }
-  const base = `https://api.github.com/repos/${GITHUB.owner}/${GITHUB.repo}/contents/${GITHUB.path}`
+  const base = `https://api.github.com/repos/${GITHUB.owner}/${GITHUB.repo}/contents/${repoPath}`
 
   let sha
   const getRes = await fetch(base + '?ref=' + GITHUB.branch, { headers })
@@ -57,8 +57,8 @@ async function commitContent(token, content) {
   }
 
   const body = {
-    message: '更新站点内容（网页编辑器）',
-    content: toBase64(JSON.stringify(content, null, 2)),
+    message,
+    content: contentBase64,
     branch: GITHUB.branch,
   }
   if (sha) body.sha = sha
@@ -72,6 +72,40 @@ async function commitContent(token, content) {
     const text = await putRes.text()
     throw new Error(putRes.status + (text ? ' ' + text.slice(0, 160) : ''))
   }
+}
+
+async function commitContent(token, content) {
+  await commitFile(
+    token,
+    GITHUB.path,
+    toBase64(JSON.stringify(content, null, 2)),
+    '更新站点内容（网页编辑器）',
+  )
+}
+
+function compressImage(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      const img = new Image()
+      img.onload = () => {
+        const max = 1600
+        const scale = Math.min(1, max / Math.max(img.width, img.height))
+        const canvas = document.createElement('canvas')
+        canvas.width = Math.max(1, Math.round(img.width * scale))
+        canvas.height = Math.max(1, Math.round(img.height * scale))
+        const ctx = canvas.getContext('2d')
+        ctx.fillStyle = '#ffffff'
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+        resolve(canvas.toDataURL('image/jpeg', 0.85))
+      }
+      img.onerror = () => reject(new Error('图片读取失败'))
+      img.src = reader.result
+    }
+    reader.onerror = () => reject(new Error('图片读取失败'))
+    reader.readAsDataURL(file)
+  })
 }
 
 function Field({ label, children }) {
@@ -394,11 +428,147 @@ function SocialList({ value, onChange }) {
   )
 }
 
+function PostEditor({ post, index, onChange, onRemove }) {
+  const update = (fn) => onChange((p) => (typeof fn === 'function' ? fn(p) : { ...p, ...fn }))
+
+  const updateBlock = (i, patch) =>
+    update((p) => ({
+      ...p,
+      blocks: (p.blocks || []).map((b, idx) => (idx === i ? { ...b, ...patch } : b)),
+    }))
+
+  const removeBlock = (i) =>
+    update((p) => ({ ...p, blocks: (p.blocks || []).filter((_, idx) => idx !== i) }))
+
+  const addText = () =>
+    update((p) => ({ ...p, blocks: [...(p.blocks || []), { type: 'text', text: '' }] }))
+
+  const addImage = (dataUrl) =>
+    update((p) => ({
+      ...p,
+      blocks: [...(p.blocks || []), { type: 'image', src: dataUrl, alt: '' }],
+    }))
+
+  const pickImage = async (e) => {
+    const file = e.target.files && e.target.files[0]
+    e.target.value = ''
+    if (!file) return
+    try {
+      const dataUrl = await compressImage(file)
+      addImage(dataUrl)
+    } catch (err) {
+      /* ignore unreadable files */
+    }
+  }
+
+  const replaceImage = async (i, e) => {
+    const file = e.target.files && e.target.files[0]
+    e.target.value = ''
+    if (!file) return
+    try {
+      const dataUrl = await compressImage(file)
+      updateBlock(i, { src: dataUrl })
+    } catch (err) {
+      /* ignore unreadable files */
+    }
+  }
+
+  return (
+    <div className="edit-object">
+      <div className="edit-object-head">
+        <span className="edit-object-index">
+          #{index + 1} {post.title || '（无标题）'}
+        </span>
+        <button className="edit-remove" onClick={onRemove} aria-label="删除文章">
+          ×
+        </button>
+      </div>
+      <div className="edit-grid">
+        <Field label="标题">
+          <input
+            className="edit-input"
+            value={post.title}
+            onChange={(e) => update({ title: e.target.value })}
+          />
+        </Field>
+        <Field label="日期">
+          <input
+            className="edit-input"
+            type="date"
+            value={post.date || ''}
+            onChange={(e) => update({ date: e.target.value })}
+          />
+        </Field>
+      </div>
+      <Field label="摘要（列表页显示）">
+        <input
+          className="edit-input"
+          value={post.summary || ''}
+          onChange={(e) => update({ summary: e.target.value })}
+        />
+      </Field>
+
+      {(post.blocks || []).map((block, i) =>
+        block.type === 'image' ? (
+          <div className="edit-object" key={i}>
+            <div className="edit-object-head">
+              <span className="edit-object-index">图片 {i + 1}</span>
+              <button className="edit-remove" onClick={() => removeBlock(i)} aria-label="删除图片">
+                ×
+              </button>
+            </div>
+            {block.src && <img className="edit-image-preview" src={block.src} alt="" />}
+            <Field label="图片说明（可选）">
+              <input
+                className="edit-input"
+                value={block.alt || ''}
+                onChange={(e) => updateBlock(i, { alt: e.target.value })}
+              />
+            </Field>
+            <label className="btn btn-secondary edit-file-btn">
+              选择图片（自动压缩）
+              <input type="file" accept="image/*" onChange={(e) => replaceImage(i, e)} hidden />
+            </label>
+          </div>
+        ) : (
+          <div className="edit-object" key={i}>
+            <div className="edit-object-head">
+              <span className="edit-object-index">段落 {i + 1}</span>
+              <button className="edit-remove" onClick={() => removeBlock(i)} aria-label="删除段落">
+                ×
+              </button>
+            </div>
+            <Field label="段落文字">
+              <textarea
+                className="edit-textarea"
+                rows={4}
+                value={block.text}
+                onChange={(e) => updateBlock(i, { text: e.target.value })}
+              />
+            </Field>
+          </div>
+        ),
+      )}
+
+      <div className="edit-toolbar">
+        <button className="edit-add" onClick={addText}>
+          ＋ 添加段落
+        </button>
+        <label className="edit-add">
+          ＋ 添加图片
+          <input type="file" accept="image/*" onChange={pickImage} hidden />
+        </label>
+      </div>
+    </div>
+  )
+}
+
 export default function Edit() {
-  const { updateContent, resetContent, clearDraft, ...content } = useContent()
+  const { updateContent, resetContent, clearDraft, posts, updateBlog, clearBlogDraft, reloadBlog, ...content } = useContent()
   const showToast = useToast()
   const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY) || '')
   const [publishing, setPublishing] = useState(false)
+  const [blogPublishing, setBlogPublishing] = useState(false)
 
   useEffect(() => {
     document.title = '叶泽楷 | 编辑内容'
@@ -468,6 +638,59 @@ export default function Edit() {
     window.location.reload()
   }
 
+  const addPost = () => {
+    const today = new Date().toISOString().slice(0, 10)
+    updateBlog((b) => ({
+      posts: [
+        ...b.posts,
+        { id: 'p' + Date.now().toString(36), title: '', date: today, summary: '', blocks: [] },
+      ],
+    }))
+  }
+
+  const updatePost = (i, fn) =>
+    updateBlog((b) => ({ posts: b.posts.map((p, idx) => (idx === i ? fn(p) : p)) }))
+
+  const removePost = (i) => updateBlog((b) => ({ posts: b.posts.filter((_, idx) => idx !== i) }))
+
+  const clearBlogLocal = () => {
+    clearBlogDraft()
+    reloadBlog()
+    showToast('已清除博客草稿，恢复线上版本')
+  }
+
+  const publishBlog = async () => {
+    if (!token.trim()) {
+      showToast('请先填写并保存 GitHub Token')
+      return
+    }
+    setBlogPublishing(true)
+    try {
+      const t = token.trim()
+      const list = JSON.parse(JSON.stringify(posts))
+      for (const post of list) {
+        for (const block of post.blocks || []) {
+          if (block.type === 'image' && block.src && block.src.startsWith('data:')) {
+            const name = post.id + '-' + Date.now().toString(36) + '.jpg'
+            await commitFile(t, 'public/blog/' + name, block.src.split(',')[1], '上传博客图片（网页编辑器）')
+            block.src = 'blog/' + name
+          }
+        }
+      }
+      await commitFile(
+        t,
+        'public/blog.json',
+        toBase64(JSON.stringify({ posts: list }, null, 2)),
+        '更新博客（网页编辑器）',
+      )
+      showToast('博客发布成功，约 1-2 分钟后对所有人可见')
+    } catch (err) {
+      showToast('博客发布失败：' + err.message)
+    } finally {
+      setBlogPublishing(false)
+    }
+  }
+
   return (
     <div className="container">
       <h1 className="page-head">编辑内容</h1>
@@ -519,6 +742,35 @@ export default function Edit() {
             如何创建 Token <Icon name="external" />
           </a>
         </div>
+      </section>
+
+      <section className="panel edit-section">
+        <h3 className="section-label">博客文章</h3>
+        <div className="edit-toolbar">
+          <button className="btn btn-primary" onClick={publishBlog} disabled={blogPublishing}>
+            {blogPublishing ? '发布中…' : '发布博客'}
+          </button>
+          <button className="btn btn-secondary" onClick={addPost}>
+            ＋ 新建文章
+          </button>
+          <button className="btn btn-secondary" onClick={clearBlogLocal}>
+            清除博客草稿
+          </button>
+        </div>
+        {posts.length === 0 && (
+          <p className="edit-hint">
+            还没有文章。点击「新建文章」开始写作，支持段落和图片；发布后访客可在文章下方评论。
+          </p>
+        )}
+        {posts.map((post, i) => (
+          <PostEditor
+            key={post.id}
+            post={post}
+            index={i}
+            onChange={(fn) => updatePost(i, fn)}
+            onRemove={() => removePost(i)}
+          />
+        ))}
       </section>
 
       <section className="panel edit-section">

@@ -13,13 +13,17 @@ export default function Projects() {
 
   return (
     <div className="container">
-      <h1 className="page-head">项目</h1>
-      <p className="page-sub">把想法变成能跑起来的东西，这里记录着它们。</p>
+      <Reveal blend>
+        <h1 className="page-head">项目</h1>
+      </Reveal>
+      <Reveal delay={0.08} blend>
+        <p className="page-sub">把想法变成能跑起来的东西，这里记录着它们。</p>
+      </Reveal>
 
       <div className="projects">
         {projects.map((project, i) => (
           <Reveal key={project.title} delay={i * 0.08}>
-            <Card3D className="panel project-card" maxTilt={6}>
+            <Card3D className="panel project-card" maxTilt={2.5}>
               <div className="glare" aria-hidden="true" />
               <div className="project-top">
                 <h2 className="project-title">{project.title}</h2>

@@ -6,6 +6,7 @@ import { useContent } from '../context/ContentContext.jsx'
 
 const links = [
   { to: '/', label: '首页' },
+  { to: '/blog', label: '博客' },
   { to: '/projects', label: '项目' },
   { to: '/about', label: '关于' },
   { to: '/contact', label: '联系' },
@@ -37,18 +38,7 @@ export default function Navbar({ theme, onToggleTheme }) {
                 end={link.to === '/'}
                 className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}
               >
-                {({ isActive }) => (
-                  <>
-                    {isActive && (
-                      <motion.span
-                        className="nav-pill"
-                        layoutId="nav-pill"
-                        transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-                      />
-                    )}
-                    {link.label}
-                  </>
-                )}
+                {link.label}
               </NavLink>
             ))}
           </nav>

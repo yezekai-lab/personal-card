@@ -1,6 +1,5 @@
 import { useEffect } from 'react'
 import Reveal from '../components/Reveal.jsx'
-import Magnetic from '../components/Magnetic.jsx'
 import CopyItem from '../components/CopyItem.jsx'
 import Icon from '../components/Icon.jsx'
 import { useContent } from '../context/ContentContext.jsx'
@@ -14,8 +13,12 @@ export default function Contact() {
 
   return (
     <div className="container">
-      <h1 className="page-head">联系</h1>
-      <p className="page-sub">点一下即可复制联系方式，或者直接给我写封邮件。</p>
+      <Reveal blend>
+        <h1 className="page-head">联系</h1>
+      </Reveal>
+      <Reveal delay={0.08} blend>
+        <p className="page-sub">点一下即可复制联系方式，或者直接给我写封邮件。</p>
+      </Reveal>
 
       <Reveal>
         <section className="panel" aria-label="联系方式" style={{ marginBottom: 18 }}>
@@ -70,12 +73,9 @@ export default function Contact() {
             ))}
           </div>
           <div className="actions" style={{ marginTop: 20 }}>
-            <Magnetic>
-              <a className="btn btn-primary" href={'mailto:' + profile.email}>
-                发邮件给我
-                <Icon name="arrow" />
-              </a>
-            </Magnetic>
+            <a className="btn btn-primary" href={'mailto:' + profile.email}>
+              发邮件给我
+            </a>
           </div>
         </section>
       </Reveal>

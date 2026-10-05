@@ -12,6 +12,7 @@ import {
 } from '../data/content.js'
 
 const STORAGE_KEY = 'personal-card-content'
+const BLOG_STORAGE_KEY = 'personal-card-blog'
 
 const DEFAULTS = {
   profile,
@@ -43,11 +44,31 @@ function loadDraft() {
   return null
 }
 
+function loadBlogDraft() {
+  try {
+    const raw = localStorage.getItem(BLOG_STORAGE_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      if (parsed && Array.isArray(parsed.posts)) return parsed
+    }
+  } catch (e) {
+    /* ignore corrupted storage */
+  }
+  return null
+}
+
+function normalizeBlog(blog) {
+  if (blog && Array.isArray(blog.posts)) return blog
+  return { posts: [] }
+}
+
 const ContentContext = createContext(null)
 
 export function ContentProvider({ children }) {
   const [content, setContent] = useState(() => mergeDefaults(loadDraft()))
   const [hasDraft] = useState(() => !!localStorage.getItem(STORAGE_KEY))
+  const [blog, setBlog] = useState(() => loadBlogDraft() || { posts: [] })
+  const [hasBlogDraft] = useState(() => !!localStorage.getItem(BLOG_STORAGE_KEY))
 
   useEffect(() => {
     if (hasDraft) return
@@ -61,6 +82,19 @@ export function ContentProvider({ children }) {
         /* keep defaults */
       })
   }, [hasDraft])
+
+  useEffect(() => {
+    if (hasBlogDraft) return
+    const url = import.meta.env.BASE_URL + 'blog.json'
+    fetch(url, { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((published) => {
+        if (published) setBlog(normalizeBlog(published))
+      })
+      .catch(() => {
+        /* keep empty */
+      })
+  }, [hasBlogDraft])
 
   const updateContent = useCallback((updater) => {
     setContent((prev) => {
@@ -87,8 +121,49 @@ export function ContentProvider({ children }) {
     setContent({ ...DEFAULTS })
   }, [clearDraft])
 
+  const updateBlog = useCallback((updater) => {
+    setBlog((prev) => {
+      const next = typeof updater === 'function' ? updater(prev) : updater
+      try {
+        localStorage.setItem(BLOG_STORAGE_KEY, JSON.stringify(next))
+      } catch (e) {
+        /* ignore quota errors */
+      }
+      return next
+    })
+  }, [])
+
+  const clearBlogDraft = useCallback(() => {
+    try {
+      localStorage.removeItem(BLOG_STORAGE_KEY)
+    } catch (e) {
+      /* ignore */
+    }
+  }, [])
+
+  const reloadBlog = useCallback(() => {
+    const url = import.meta.env.BASE_URL + 'blog.json'
+    return fetch(url, { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((published) => setBlog(normalizeBlog(published)))
+      .catch(() => {
+        /* keep current */
+      })
+  }, [])
+
   return (
-    <ContentContext.Provider value={{ ...content, updateContent, resetContent, clearDraft }}>
+    <ContentContext.Provider
+      value={{
+        ...content,
+        posts: blog.posts,
+        updateContent,
+        resetContent,
+        clearDraft,
+        updateBlog,
+        clearBlogDraft,
+        reloadBlog,
+      }}
+    >
       {children}
     </ContentContext.Provider>
   )

@@ -12,8 +12,12 @@ export default function About() {
 
   return (
     <div className="container">
-      <h1 className="page-head">关于我</h1>
-      <p className="page-sub">{profile.summary}</p>
+      <Reveal blend>
+        <h1 className="page-head">关于我</h1>
+      </Reveal>
+      <Reveal delay={0.08} blend>
+        <p className="page-sub">{profile.summary}</p>
+      </Reveal>
 
       <Reveal>
         <section className="panel" aria-label="学习路径" style={{ marginBottom: 18 }}>
