@@ -1,11 +1,11 @@
 import { useEffect, useRef } from 'react'
 
-// 在 giscus.app 完成配置后，把下面两项填上即可启用评论。
+// giscus 配置（giscus.app 生成）
 const GISCUS = {
   repo: 'yezekai-lab/personal-card',
-  repoId: '',
+  repoId: 'R_kgDOTZQ0RA',
   category: 'Announcements',
-  categoryId: '',
+  categoryId: 'DIC_kwDOTZQ0RM4DHK1p',
 }
 
 function currentTheme() {
