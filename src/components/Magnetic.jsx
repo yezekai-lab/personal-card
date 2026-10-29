@@ -1,25 +1,19 @@
-import { useRef } from 'react'
+import { motion, useMotionValue, useReducedMotion, useSpring } from 'framer-motion'
 
-export default function Magnetic({ children, strength = 0.2 }) {
-  const ref = useRef(null)
-
-  const onMove = (e) => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    const el = ref.current
-    const rect = el.getBoundingClientRect()
-    const dx = e.clientX - (rect.left + rect.width / 2)
-    const dy = e.clientY - (rect.top + rect.height / 2)
-    el.style.transform = `translate(${dx * strength}px, ${dy * strength * 1.3}px)`
-  }
-
-  const onLeave = () => {
-    const el = ref.current
-    if (el) el.style.transform = ''
-  }
-
+export default function Magnetic({ children, strength = 0.15 }) {
+  const reducedMotion = useReducedMotion()
+  const x = useMotionValue(0)
+  const y = useMotionValue(0)
+  const springX = useSpring(x, { stiffness: 220, damping: 18 })
+  const springY = useSpring(y, { stiffness: 220, damping: 18 })
   return (
-    <span ref={ref} onPointerMove={onMove} onPointerLeave={onLeave} style={{ display: 'inline-flex' }}>
+    <motion.span className="magnetic" style={{ x: reducedMotion ? 0 : springX, y: reducedMotion ? 0 : springY }} onPointerMove={(event) => {
+      if (reducedMotion || event.pointerType !== 'mouse') return
+      const rect = event.currentTarget.getBoundingClientRect()
+      x.set((event.clientX - rect.left - rect.width / 2) * strength)
+      y.set((event.clientY - rect.top - rect.height / 2) * strength)
+    }} onPointerLeave={() => { x.set(0); y.set(0) }}>
       {children}
-    </span>
+    </motion.span>
   )
 }
