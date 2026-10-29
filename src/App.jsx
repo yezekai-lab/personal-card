@@ -32,7 +32,7 @@ export default function App() {
   }, [theme])
   useEffect(() => {
     window.scrollTo(0, 0)
-    document.getElementById('main-content')?.focus({ preventScroll: true })
+    document.getElementById('main-content').focus({ preventScroll: true })
   }, [pathname])
   return (
     <ToastProvider>
@@ -40,7 +40,7 @@ export default function App() {
         <ContentProvider>
           <a className="skip-link" href="#main-content" onClick={(event) => {
             event.preventDefault()
-            document.getElementById('main-content')?.focus()
+            document.getElementById('main-content').focus()
           }}>跳到主要内容</a>
           <Navbar theme={theme} onToggleTheme={() => setTheme((t) => t === 'dark' ? 'light' : 'dark')} />
           <KonamiCode />

@@ -29,14 +29,14 @@ export default function Navbar({ theme, onToggleTheme }) {
     const onKeyDown = (event) => {
       if (event.key === 'Escape') {
         setOpen(false)
-        menuButton.current?.focus()
+        menuButton.current.focus()
       }
       if (event.key === 'Tab') {
         const links = [...document.querySelectorAll('.mobile-menu a')]
-        const controls = [menuButton.current, ...links].filter(Boolean)
+        const controls = [menuButton.current, ...links]
         const current = controls.indexOf(document.activeElement)
         event.preventDefault()
-        controls[(current + (event.shiftKey ? -1 : 1) + controls.length) % controls.length]?.focus()
+        controls[(current + (event.shiftKey ? -1 : 1) + controls.length) % controls.length].focus()
       }
     }
     const onResize = () => { if (window.innerWidth > 720) setOpen(false) }
