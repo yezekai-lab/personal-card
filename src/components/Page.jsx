@@ -1,3 +1,3 @@
 export default function Page({ children }) {
-  return <main className="page">{children}</main>
+  return <main id="main-content" className="page" tabIndex={-1}>{children}</main>
 }

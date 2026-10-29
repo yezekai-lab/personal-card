@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import Icon from './Icon.jsx'
@@ -15,11 +15,39 @@ const links = [
 export default function Navbar({ theme, onToggleTheme }) {
   const { profile } = useContent()
   const [open, setOpen] = useState(false)
+  const menuButton = useRef(null)
   const location = useLocation()
 
   useEffect(() => {
     setOpen(false)
   }, [location.pathname])
+
+  useEffect(() => {
+    if (!open) return
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setOpen(false)
+        menuButton.current?.focus()
+      }
+      if (event.key === 'Tab') {
+        const links = [...document.querySelectorAll('.mobile-menu a')]
+        const controls = [menuButton.current, ...links].filter(Boolean)
+        const current = controls.indexOf(document.activeElement)
+        event.preventDefault()
+        controls[(current + (event.shiftKey ? -1 : 1) + controls.length) % controls.length]?.focus()
+      }
+    }
+    const onResize = () => { if (window.innerWidth > 720) setOpen(false) }
+    document.addEventListener('keydown', onKeyDown)
+    window.addEventListener('resize', onResize)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      document.removeEventListener('keydown', onKeyDown)
+      window.removeEventListener('resize', onResize)
+    }
+  }, [open])
 
   return (
     <>
@@ -47,16 +75,18 @@ export default function Navbar({ theme, onToggleTheme }) {
             <button
               className="theme-toggle"
               onClick={onToggleTheme}
-              aria-label="切换深色模式"
-              title="切换深色模式"
+              aria-label={theme === 'dark' ? '切换浅色模式' : '切换深色模式'}
+              title={theme === 'dark' ? '切换浅色模式' : '切换深色模式'}
             >
               <Icon name="sun" className="icon-sun" />
               <Icon name="moon" className="icon-moon" />
             </button>
             <button
               className="menu-btn"
+              ref={menuButton}
               onClick={() => setOpen((v) => !v)}
-              aria-label="打开菜单"
+              aria-label={open ? '关闭菜单' : '打开菜单'}
+              aria-controls="mobile-navigation"
               aria-expanded={open}
             >
               <Icon name={open ? 'close' : 'menu'} />
@@ -69,6 +99,7 @@ export default function Navbar({ theme, onToggleTheme }) {
         {open && (
           <motion.nav
             className="mobile-menu"
+            id="mobile-navigation"
             aria-label="移动端导航"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -84,6 +115,7 @@ export default function Navbar({ theme, onToggleTheme }) {
               >
                 <NavLink
                   to={link.to}
+                  onClick={() => setOpen(false)}
                   end={link.to === '/'}
                   className={({ isActive }) => 'mobile-link' + (isActive ? ' active' : '')}
                 >
