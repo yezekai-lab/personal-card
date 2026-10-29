@@ -1,7 +1,6 @@
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import Avatar from '../components/Avatar.jsx'
-import Typewriter from '../components/Typewriter.jsx'
 import Motto from '../components/Motto.jsx'
 import StatusBar from '../components/StatusBar.jsx'
 import Icon from '../components/Icon.jsx'
@@ -10,124 +9,71 @@ import { useContent } from '../context/ContentContext.jsx'
 
 export default function Home() {
   const { profile, typewriterPhrases, skills, vibes, mottos, statuses } = useContent()
-
-  useEffect(() => {
-    document.title = '叶泽楷 | 首页'
-  }, [])
-
+  useEffect(() => { document.title = `${profile.name} | 首页` }, [profile.name])
   return (
-    <div className="container">
-      <div className="card">
-        <section className="profile">
-          <Reveal delay={0.02} y={14}>
-            <Avatar mottos={mottos} />
-          </Reveal>
-          <div className="intro">
-            <Reveal delay={0.06} y={14} blend>
-              <p className="eyebrow">
-                {profile.title}
-              </p>
-            </Reveal>
-            <h1>{profile.name}</h1>
-            <Reveal delay={0.28} y={14} blend>
-              <h2 className="typewrap">
-                <Typewriter phrases={typewriterPhrases} />
-                <span className="caret" aria-hidden="true" />
-              </h2>
-            </Reveal>
-            <Reveal delay={0.36} y={14} blend>
-              <p className="summary">{profile.summary}</p>
-            </Reveal>
-          </div>
-        </section>
-
-        <Reveal delay={0.44} y={14}>
-          <Motto mottos={mottos} />
-        </Reveal>
-
-        <Reveal delay={0.52} y={14}>
-          <div className="actions center" style={{ marginTop: 18 }}>
-            <Link className="btn btn-primary" to="/projects">
-              查看项目
-            </Link>
-            <Link className="btn btn-secondary" to="/contact">
-              联系我
-            </Link>
-          </div>
-        </Reveal>
-      </div>
-
-      <section className="entry-grid" aria-label="快速导航">
+    <div className="home">
+      <section className="hero" aria-labelledby="hero-title">
         <Reveal>
-          <Link to="/projects" className="entry-tile">
-            <span className="entry-icon">
-              <Icon name="code" />
-            </span>
-            <h2 className="entry-title">项目</h2>
-            <p className="entry-desc">把想法变成能跑起来的东西</p>
-            <span className="entry-link">
-              了解更多
-            </span>
-          </Link>
+          <div className="hero-identity">
+            <Avatar mottos={mottos} />
+            <span>{profile.title}<span className="identity-location">{profile.location} · 保持好奇，持续创造</span></span>
+          </div>
         </Reveal>
         <Reveal delay={0.06}>
-          <Link to="/about" className="entry-tile">
-            <span className="entry-icon">
-              <Icon name="user" />
-            </span>
-            <h2 className="entry-title">关于</h2>
-            <p className="entry-desc">我的经历、学习路径与兴趣</p>
-            <span className="entry-link">
-              了解更多
-            </span>
-          </Link>
+          <h1 id="hero-title"><span className="hero-greeting">你好，我是{profile.name}。</span>让想法，<br className="mobile-break" /><span className="hero-gradient">成为现实。</span></h1>
         </Reveal>
-        <Reveal delay={0.12}>
-          <Link to="/contact" className="entry-tile">
-            <span className="entry-icon">
-              <Icon name="mail" />
-            </span>
-            <h2 className="entry-title">联系</h2>
-            <p className="entry-desc">发封邮件，或复制联系方式</p>
-            <span className="entry-link">
-              了解更多
-            </span>
-          </Link>
+        <Reveal delay={0.12}><p className="hero-description">{profile.summary}</p></Reveal>
+        <Reveal delay={0.18}>
+          <div className="actions center hero-actions">
+            <Link className="btn btn-primary" to="/projects">探索我的项目 <span aria-hidden="true">↗</span></Link>
+            <Link className="text-link" to="/contact">聊一聊 <span aria-hidden="true">›</span></Link>
+          </div>
         </Reveal>
+        <div className="hero-topics" aria-label="关注领域">{typewriterPhrases.map((phrase) => <span key={phrase}>{phrase}</span>)}</div>
+        <a className="explore-cue" href="#explore" onClick={(event) => {
+          event.preventDefault()
+          document.getElementById('explore')?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
+        }}>向下探索 <span aria-hidden="true">↓</span></a>
       </section>
-
-      <div style={{ display: 'grid', gap: 14, marginTop: 16 }}>
-        <Reveal delay={0.05}>
-          <section className="panel panel--center" aria-label="技术栈">
-            <h3 className="section-label">技术栈</h3>
-            <div className="chips">
-              {skills.map((skill) => (
-                <span key={skill} className="chip no-icon">
-                  {skill}
-                </span>
-              ))}
-            </div>
-          </section>
-        </Reveal>
-
-        <Reveal delay={0.12}>
-          <section className="panel panel--center" aria-label="关于我">
-            <h3 className="section-label">关于我</h3>
-            <div className="chips">
-              {vibes.map((vibe) => (
-                <span key={vibe.label} className="chip">
-                  <Icon name={vibe.icon} />
-                  {vibe.label}
-                </span>
-              ))}
-            </div>
-          </section>
-        </Reveal>
-      </div>
-
-      <Reveal delay={0.18} blend>
-        <StatusBar statuses={statuses} />
-      </Reveal>
+      <section className="explore-section" id="explore" aria-labelledby="explore-title">
+        <div className="section-heading"><div><p className="eyebrow">A LITTLE MORE ABOUT ME</p><h2 id="explore-title">不止于代码。</h2></div><p>作品、思考，以及生活中的灵感。</p></div>
+        <div className="showcase-grid">
+          <Reveal>
+            <Link to="/projects" className="showcase showcase-projects">
+              <span className="showcase-kicker">SELECTED WORK</span>
+              <h3>想法落地。<br />热爱有迹可循。</h3>
+              <p>把复杂的问题，写成清晰的答案。</p>
+              <div className="code-art" aria-hidden="true"><div className="window-dots"><i /><i /><i /><span>hello, world</span></div><div className="code-lines"><span><b>const</b> idea = <em>'what if?'</em>;</span><span><b>while</b> (curious) {'{'}</span><span className="code-indent">learn();</span><span className="code-indent">build(<em>idea</em>);</span><span>{'}'}</span></div></div>
+              <span className="showcase-link">查看项目 <span aria-hidden="true">↗</span></span>
+            </Link>
+          </Reveal>
+          <Reveal delay={0.06}>
+            <Link to="/about" className="showcase showcase-about">
+              <span className="showcase-kicker">BEHIND THE CODE</span>
+              <h3>保持好奇。<br />一直在路上。</h3>
+              <p>关于我的经历、学习与日常。</p>
+              <div className="monogram-art" aria-hidden="true">{profile.monogram}<span>Always learning.</span></div>
+              <span className="showcase-link">认识我 <span aria-hidden="true">↗</span></span>
+            </Link>
+          </Reveal>
+          <Reveal delay={0.12}>
+            <Link to="/blog" className="showcase showcase-blog">
+              <span className="showcase-kicker">NOTES & THOUGHTS</span>
+              <h3>记录此刻。<br />留给未来。</h3>
+              <p>一些想法、笔记和生活片段。</p>
+              <div className="notes-art" aria-hidden="true"><span>随想</span><i /><i /><i /><b>每一个想法，<br />都有下一页。</b></div>
+              <span className="showcase-link">阅读博客 <span aria-hidden="true">↗</span></span>
+            </Link>
+          </Reveal>
+        </div>
+      </section>
+      <section className="personal-section" aria-label="技术与生活">
+        <Reveal><div className="personal-panel"><p className="eyebrow">MY TOOLKIT</p><h2>手边的工具。<br /><span>探索的起点。</span></h2><div className="chips">{skills.map((skill) => <span key={skill} className="chip no-icon">{skill}</span>)}</div></div></Reveal>
+        <Reveal delay={0.06}><div className="personal-panel"><p className="eyebrow">OFF THE CLOCK</p><h2>认真写代码。<br /><span>也认真生活。</span></h2><div className="chips">{vibes.map((vibe) => <span key={vibe.label} className="chip"><Icon name={vibe.icon} />{vibe.label}</span>)}</div></div></Reveal>
+      </section>
+      <Reveal><Motto mottos={mottos} /></Reveal>
+      <footer className="home-footer"><span>{profile.name} · Personal space</span><Link to="/contact">保持联系 <span aria-hidden="true">↗</span></Link></footer>
+      <StatusBar statuses={statuses} />
     </div>
   )
 }
